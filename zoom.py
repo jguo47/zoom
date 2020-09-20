@@ -6,7 +6,8 @@
 #
 #
 #
-#            Ji Guo @ Uiowa
+#            Ji Guo
+#       Learning Analytics Specialist @ Uiowa
 #
 #
 ###############################################################################
@@ -47,7 +48,7 @@ def get_token(token = False, refresh_token = False):
 
 
 def get_meeting_daily_report(year, month):
-    
+
     meeting_url = 'https://api.zoom.us/v2/report/daily?month={}&year={}'.format(month, year)
     # headers
     headers = { 'authorization': "Bearer {}".format(get_token(token = True)) }
@@ -57,7 +58,7 @@ def get_meeting_daily_report(year, month):
     meeting_data = meetings.json()
     # create lists
     date = []
-    new_users = [] 
+    new_users = []
     meetings = []
     participants = []
     meeting_minutes = []
@@ -87,7 +88,7 @@ def get_meeting_daily_report(year, month):
 
 def get_meeting_history(meeting_id):
     """
-    
+
 
     Parameters
     ----------
@@ -97,7 +98,7 @@ def get_meeting_history(meeting_id):
     Returns
     -------
     data : dataframe
-        list of uuids and associated meeting information. 
+        list of uuids and associated meeting information.
 
     """
     #load headers
@@ -129,7 +130,7 @@ def get_meeting_history(meeting_id):
     host_id = []
     host_name = []
     host_email = []
-    
+
     # loop uuid
     for i in uuids:
         print(i)
@@ -147,7 +148,7 @@ def get_meeting_history(meeting_id):
         meeting_url = 'https://api.zoom.us/v2/metrics/meetings/{}?type=past'.format(k)
         meeting = requests.get(meeting_url, headers = headers)
         meeting_data = meeting.json()
-        # add data  
+        # add data
         uuid.append(meeting_data['uuid'])
         dept.append(meeting_data['dept'])
         start_time.append(meeting_data['start_time'])
@@ -165,9 +166,9 @@ def get_meeting_history(meeting_id):
         host_id.append(meeting_data['id'])
         host_name.append(meeting_data['host'])
         host_email.append(meeting_data['email'])
-            
+
     # create df
-    data = pd.DataFrame({'meeting_uuid':uuid, 
+    data = pd.DataFrame({'meeting_uuid':uuid,
                          'meeting_department':dept,
                          'meeting_start_time':start_time,
                          'meeting_end_time':end_time,
@@ -192,10 +193,10 @@ def get_meeting_history(meeting_id):
 # get meeting participants from dashboard
 ###############################################################################
 # duration, join time, left time, email maybe different from report
-# missing some speaker or info. 
+# missing some speaker or info.
 def get_meeting_participants_dashboard(muuid):
     """
-    
+
 
     Parameters
     ----------
@@ -205,7 +206,7 @@ def get_meeting_participants_dashboard(muuid):
     Returns
     -------
     data : dataframe
-        user information associated to the meetings. 
+        user information associated to the meetings.
 
     """
 # if uuid starts with '/' or '//', quote 2 times
@@ -217,15 +218,15 @@ def get_meeting_participants_dashboard(muuid):
         print('Pay attention!!!!')
         print('')
     else:
-            k = muuid    
+            k = muuid
 
 # get data
     headers = { 'authorization': "Bearer {}".format(get_token(token = True))}
     meeting_url = 'https://api.zoom.us/v2/metrics/meetings/{}/participants?type=past&page_size=300'.format(k)
     meeting = requests.get(meeting_url, headers = headers)
     meeting_data = meeting.json()
-    
-    # create lists 
+
+    # create lists
     user_zoom_id = []
     user_id = []
     user_name = []
@@ -249,22 +250,22 @@ def get_meeting_participants_dashboard(muuid):
     speaker = []
 
 #every for loop to determine whether there is data associated to the variable.
-# if True, yes, else, assigned value. 
+# if True, yes, else, assigned value.
 
     for info in meeting_data['participants']:
         if info.get('id'):
             user_zoom_id.append(info['id'])
         else:
             user_zoom_id.append('NoZoomUserID')
-           
+
     for info in meeting_data['participants']:
         if info.get('connection_type'):
             conn_type.append(info['connection_type'])
         else:
-            conn_type.append('NoData')    
-            
-    
-    for info in meeting_data['participants']:    
+            conn_type.append('NoData')
+
+
+    for info in meeting_data['participants']:
         # if email is in the dict or not
         if info.get('email'):
             user_id.append(info['user_id'])
@@ -279,7 +280,7 @@ def get_meeting_participants_dashboard(muuid):
             share_desktop.append(info['share_desktop'])
             share_whiteboard.append(info['share_whiteboard'])
             recording.append(info['recording'])
-            
+
         else:
             user_id.append(info['user_id'])
             user_name.append(info['user_name'])
@@ -306,8 +307,8 @@ def get_meeting_participants_dashboard(muuid):
             left_time.append(info['join_time'])
             leave_reason.append('LT=JT')
             duration.append(int(0))
-    
-        
+
+
     for info in meeting_data['participants']:
         if info.get('camera'):
             camera.append(info['camera'])
@@ -319,14 +320,14 @@ def get_meeting_participants_dashboard(muuid):
             mic.append(info['microphone'])
         else:
             mic.append('NoMicInfo')
-            
+
     for info in meeting_data['participants']:
         if info.get('speaker'):
             speaker.append(info['speaker'])
         else:
             speaker.append('NoSpeakerInfo')
-        
-# create the dataframe   
+
+# create the dataframe
     data = pd.DataFrame({'user_zoom_id':user_zoom_id,
                          'user_id':user_id,
                          'user_name':user_name,
@@ -347,13 +348,13 @@ def get_meeting_participants_dashboard(muuid):
                          'user_share_whiteboard':share_whiteboard,
                          'user_recording':recording,
                          'user_leave_reason':leave_reason})
-    
+
     data['meeting_uuid'] = muuid
     if 'NoEmail' in list(data.user_email):
         no_email = data[data.user_email == 'NoEmail']
         print('No Email Exists: {}, Check report'.format(len(no_email)))
         print(no_email)
-        
+
     return data
 
 ###############################################################################
@@ -364,7 +365,7 @@ def get_meeting_participants_dashboard(muuid):
 
 def merge_meeting_user(meetings):
     """
-    
+
 
     Parameters
     ----------
@@ -395,7 +396,7 @@ def merge_meeting_user(meetings):
 
 def get_all_zoom_users():
     """
-    
+
 
     Returns
     -------
@@ -413,7 +414,7 @@ def get_all_zoom_users():
     user_verified = []
     user_status = []
     user_created = []
-    # get the pages 
+    # get the pages
     #load headers
     headers = { 'authorization': "Bearer {}".format(get_token(token = True))}
     pre = 'https://api.zoom.us/v2/users?page_size=300'
@@ -440,7 +441,7 @@ def get_all_zoom_users():
                 user_verified.append(users['users'][i]['verified'])
                 user_created.append(users['users'][i]['created_at'])
                 user_status.append(users['users'][i]['status'])
-        
+
             else:
                 user_zoom_id.append(users['users'][i]['id'])
                 user_first_name.append(users['users'][i]['first_name'])
@@ -471,7 +472,7 @@ def get_all_zoom_users():
 
 def meeting_meta_data(meeting_id):
     """
-    
+
 
     Parameters
     ----------
@@ -483,14 +484,14 @@ def meeting_meta_data(meeting_id):
     meeting : dataframe
         meeting meta data
 
-    """    
+    """
     url = 'https://api.zoom.us/v2/meetings/{}'.format(meeting_id)
     #load headers
     headers = { 'authorization': "Bearer {}".format(get_token(token = True))}
     m = requests.get(url, headers = headers)
     m_meta = m.json()
 
-    
+
     # create lists
     id = []
     created_at = []
@@ -508,7 +509,7 @@ def meeting_meta_data(meeting_id):
     repeated_days = []
     repeated_type = []
     occurrences = []
-    
+
     if m_meta.get('occurrences'):
             # append to list
         id.append(m_meta['id'])
@@ -527,7 +528,7 @@ def meeting_meta_data(meeting_id):
         repeat_interval.append(m_meta['recurrence']['repeat_interval'])
         repeated_days.append(m_meta['recurrence']['weekly_days'])
         repeated_type.append(m_meta['recurrence']['type'])
-        
+
     else:
         id.append(m_meta['id'])
         created_at.append(m_meta['created_at'])
@@ -546,9 +547,9 @@ def meeting_meta_data(meeting_id):
         repeated_days.append('NoRepeatedDays')
         repeated_type.append('NoType')
 
-    
 
-    
+
+
     #create a data frame
     meeting = pd.DataFrame({'meeting_id':id,
                             'meeting_created_at':created_at,
@@ -573,11 +574,11 @@ def meeting_meta_data(meeting_id):
 # get meeting participants from report
 ###############################################################################
 # duration, join time, left time, email maybe different from dashboard
-# missing some speaker or info. 
+# missing some speaker or info.
 
 def get_meeting_participants_report(muuid):
     """
-    
+
     Parameters
     ----------
     muuid : string
@@ -586,7 +587,7 @@ def get_meeting_participants_report(muuid):
     Returns
     -------
     data : dataframe
-        user information associated to the meetings. 
+        user information associated to the meetings.
 
     """
 # if uuid starts with '/' or '//', quote 2 times
@@ -598,15 +599,15 @@ def get_meeting_participants_report(muuid):
         print('Pay attention!!!!')
         print('')
     else:
-            k = muuid    
+            k = muuid
 
 # get data
     headers = { 'authorization': "Bearer {}".format(get_token(token = True))}
     meeting_url = 'https://api.zoom.us/v2/report/meetings/{}/participants?type=past&page_size=300'.format(k)
     meeting = requests.get(meeting_url, headers = headers)
     meeting_data = meeting.json()
-    
-    # create lists 
+
+    # create lists
     user_zoom_id = []
     user_id = []
     user_name = []
@@ -616,7 +617,7 @@ def get_meeting_participants_report(muuid):
     duration = []
 
 #every for loop to determine whether there is data associated to the variable.
-# if True, yes, else, assigned value. 
+# if True, yes, else, assigned value.
 
     for info in meeting_data['participants']:
         if info.get('user_email'):
@@ -627,7 +628,7 @@ def get_meeting_participants_report(muuid):
             join_time.append(info['join_time'])
             left_time.append(info['leave_time'])
             duration.append(info['duration'])
-            
+
         if not info.get('user_email'):
             user_zoom_id.append(info['id'])
             user_id.append(info['user_id'])
@@ -636,7 +637,7 @@ def get_meeting_participants_report(muuid):
             join_time.append(info['join_time'])
             left_time.append(info['leave_time'])
             duration.append(info['duration'])
-        
+
     data = pd.DataFrame({'user_zoom_id':user_zoom_id,
                          'user_id':user_id,
                          'user_name':user_name,
@@ -644,7 +645,7 @@ def get_meeting_participants_report(muuid):
                          'user_join_time':join_time,
                          'user_left_time':left_time,
                          'user_attendance_duration':duration})
-    
+
     data['meeting_uuid'] = muuid
     return data
 
@@ -685,7 +686,7 @@ def time_conversion(dataframe):
 
 def matching_emails(uuid):
     """
-    
+
 
     Parameters
     ----------
@@ -730,13 +731,13 @@ def save_token(token, xdrive = False):
 # refresh_token
 ###############################################################################
 
-        
+
 def refresh_token(refreshtoken):
     # header with cliend id and client pass
     h = {"Authorization": "Basic NFlwM2Z4WE9TTUNEYWlDZ21tVEpydzpoUHlwYWRJdmc0NkR4b0lmZlJrU1NtcU40SElvYlFzUg=="}
     # refresh url
     refresh_url = 'https://zoom.us/oauth/token?grant_type=refresh_token&refresh_token={}'.format(refreshtoken)
-    # get a new token   
+    # get a new token
     get_new_token = requests.post(refresh_url, headers = h)
     tokens = get_new_token.text
     return tokens
@@ -787,3 +788,114 @@ def user_time_conversion(dataframe):
         df.user_join_time[i] = c_uj.replace(tzinfo=None)
         df.user_left_time[i] = c_ul.replace(tzinfo=None)
     return df
+
+
+###############################################################################
+# zoom user engagement
+###############################################################################
+
+def engagement(temp_meeting):
+
+    end_time = datetime.strptime(temp_meeting.meeting_end_time[0][:19], '%Y-%m-%d %H:%M:%S')
+    start_time = datetime.strptime(temp_meeting.meeting_start_time[0][:19], '%Y-%m-%d %H:%M:%S')
+    difference = end_time - start_time
+    # get the total seconds
+    temp_meeting['meeting_length'] = difference.total_seconds()
+    # reduce the columns
+    temp_meeting_use = temp_meeting[['meeting_uuid', 'meeting_start_time', 'meeting_end_time',
+                                     'meeting_length', 'meeting_host_email', 'user_email', 'user_join_time',
+                                     'user_left_time', 'user_attendance_duration', 'user_leave_reason']]
+
+
+    # lower case all the emails
+    temp_meeting_use.meeting_host_email = temp_meeting_use.meeting_host_email.str.lower()
+    temp_meeting_use.user_email = temp_meeting_use.user_email.str.lower()
+    # get the host email
+    host = temp_meeting_use.meeting_host_email[0]
+    # create a column for identifying the host
+    temp_meeting_use['host'] = np.nan
+    # convert to array
+    temp_array = temp_meeting_use.to_numpy()
+    # identify host of the meeting
+    for i in range(len(temp_array)):
+        if temp_array[i][5] == host:
+            temp_array[i][10] = 'yes'
+        else:
+            temp_array[i][10] = 'no'
+    temp_meetings = pd.DataFrame(temp_array, columns = temp_meeting_use.columns)
+    # keep non host users
+    temp_meeting_users = temp_meetings[temp_meetings.host == 'no']
+    if len(temp_meeting_users) != 0:
+        # get aggregated duration
+        users = temp_meeting_users.groupby('user_email')['user_attendance_duration'].sum().reset_index()
+        counts = temp_meeting_users.groupby('user_email')['user_attendance_duration'].count().reset_index()
+        users = pd.merge(users, counts, on = 'user_email')
+        users.columns = ['user_email', 'agg_duration', 'agg_activities']
+        # combine original to aggregated duration
+        # outer join = keep all records for time selection
+        agg_users = pd.merge(temp_meeting_users, users, how = 'outer')
+
+        # get the earilest join time
+        start_full = agg_users.sort_values('user_join_time').drop_duplicates(subset = 'user_email', keep = 'first')
+        start = start_full[['user_email', 'user_join_time']]
+        # get the latest end time
+        end_full = agg_users.sort_values('user_left_time').drop_duplicates(subset = 'user_email', keep = 'last')
+        end = end_full[['user_email', 'user_left_time']]
+        # create user time with earlies and latest time
+        user_time = pd.merge(start, end)
+        user_time.columns = ['user_email', 'join_time', 'leave_time']
+        # merge back to the orginal set
+        new_agg_users = pd.merge(agg_users, user_time)
+        # keep unique users
+        final_agg_users = new_agg_users.drop_duplicates(subset = 'user_email').reset_index(drop = True)
+        # remove some duplicated columns
+        final_agg_users = final_agg_users[['meeting_uuid', 'meeting_start_time', 'meeting_end_time',
+                                           'meeting_length', 'meeting_host_email', 'user_email',
+                                           'user_leave_reason', 'agg_duration', 'join_time', 'leave_time',
+                                           'agg_activities']]
+
+        # calculate meeting percent
+        final_agg_users['meeting_percent'] = round(final_agg_users.agg_duration / temp_meeting.meeting_length, 4)
+
+        #get meeting early or late
+        end_time = datetime.strptime(final_agg_users.meeting_end_time[0][:19], '%Y-%m-%d %H:%M:%S')
+        start_time = datetime.strptime(final_agg_users.meeting_start_time[0][:19], '%Y-%m-%d %H:%M:%S')
+
+        # create engaged, join and leave variables
+        final_agg_users['engaged'] = np.nan
+        final_agg_users['join_late'] = np.nan
+        final_agg_users['leave_early'] = np.nan
+
+        # convert to array for fast speed
+        final_agg_array = final_agg_users.to_numpy()
+
+        # get the average late join time and early leave time
+        class_late_join = []
+        class_early_leave = []
+        for i in range(len(final_agg_array)):
+            user_join_time = datetime.strptime(final_agg_array[i][8][:19], '%Y-%m-%d %H:%M:%S')
+            user_leave_time = datetime.strptime(final_agg_array[i][9][:19], '%Y-%m-%d %H:%M:%S')
+            # append a list
+            class_late_join.append((user_join_time - start_time).total_seconds())
+            class_early_leave.append((end_time - user_leave_time).total_seconds())
+
+        # calculate the mean for join time and leave time
+        mean_late_join = sum(class_late_join)/len(class_late_join)
+        mean_early_leave = sum(class_early_leave)/len(class_early_leave)
+
+        for i in range(len(final_agg_array)):
+            user_join_time = datetime.strptime(final_agg_array[i][8][:19], '%Y-%m-%d %H:%M:%S')
+            user_leave_time = datetime.strptime(final_agg_array[i][9][:19], '%Y-%m-%d %H:%M:%S')
+            # calculate difference
+            if (((user_join_time - start_time).total_seconds()) > mean_late_join):
+                final_agg_array[i][13] = 'late'
+            if (mean_early_leave < ((end_time - user_leave_time).total_seconds())):
+                final_agg_array[i][14] = 'early'
+            if final_agg_array[i][11] > 0.7:
+                final_agg_array[i][12] = 'engaged'
+
+        # create back dataframe
+        result = pd.DataFrame(final_agg_array, columns = final_agg_users.columns)
+        # fillna with no
+        result = result.fillna('no')
+        return result
